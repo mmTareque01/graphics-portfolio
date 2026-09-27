@@ -179,7 +179,166 @@ function orbit(g, w, h, t, c1, c2, m) {
   g.beginPath(); g.arc(cx, cy, 40, 0, TAU); g.fill();
 }
 
-const painters = { tenants, pulse, wave, graph, orbit };
+// Grant workflow: application cards travel through review stages to approval
+function flow(g, w, h, t, c1, c2, m) {
+  backdrop(g, w, h, c1, c2);
+  const stages = ['APPLY', 'REVIEW', 'APPROVE', 'PAY'];
+  const top = h * 0.2, colW = w / stages.length;
+  g.font = '600 10px JetBrains Mono, monospace';
+  g.textAlign = 'center';
+  stages.forEach((s, i) => {
+    const x = colW * i + colW / 2;
+    g.fillStyle = hexA('#ffffff', 0.45);
+    g.fillText(s, x, top - 14);
+    g.strokeStyle = hexA(c1, 0.12);
+    g.setLineDash([3, 5]);
+    g.beginPath(); g.moveTo(colW * (i + 1), top); g.lineTo(colW * (i + 1), h * 0.9); g.stroke();
+    g.setLineDash([]);
+  });
+  for (let k = 0; k < 9; k++) {
+    const p = (t * 0.12 + k / 9) % 1;
+    const x = p * w, lane = k % 3;
+    const y = top + 16 + lane * h * 0.22;
+    const cw = Math.min(90, colW * 0.62), ch = h * 0.15;
+    const hover = Math.max(0, 1 - Math.hypot(x - m.x, y + ch / 2 - m.y) / 90);
+    const done = p > 0.75;
+    g.fillStyle = hexA(done ? '#7dffb2' : c1, 0.08 + hover * 0.2);
+    g.strokeStyle = hexA(done ? '#7dffb2' : c1, 0.55 + hover * 0.4);
+    g.beginPath(); g.roundRect(x - cw / 2, y, cw, ch, 8); g.fill(); g.stroke();
+    g.fillStyle = hexA('#ffffff', 0.5);
+    g.fillRect(x - cw / 2 + 10, y + 12, cw * 0.55, 3);
+    g.fillRect(x - cw / 2 + 10, y + 21, cw * 0.35, 3);
+    if (done) {
+      g.strokeStyle = '#7dffb2';
+      g.lineWidth = 2;
+      g.beginPath(); g.moveTo(x + cw / 2 - 26, y + ch - 14); g.lineTo(x + cw / 2 - 20, y + ch - 8); g.lineTo(x + cw / 2 - 10, y + ch - 20); g.stroke();
+      g.lineWidth = 1;
+    }
+  }
+}
+
+// Video conferencing: participant tiles with speaking rings and live captions
+function video(g, w, h, t, c1, c2, m) {
+  backdrop(g, w, h, c1, c2);
+  const cols = 3, rows = 2, pad = 14, top = 46;
+  const tw = (w - pad * (cols + 1)) / cols, th = (h * 0.68 - top - pad * rows) / rows;
+  const speaker = Math.floor(t / 1.6) % 6;
+  for (let i = 0; i < 6; i++) {
+    const x = pad + (i % cols) * (tw + pad), y = top + Math.floor(i / cols) * (th + pad);
+    const hover = m.x > x && m.x < x + tw && m.y > y && m.y < y + th;
+    const talking = i === speaker;
+    g.fillStyle = hexA('#ffffff', hover ? 0.08 : 0.04);
+    g.beginPath(); g.roundRect(x, y, tw, th, 10); g.fill();
+    if (talking) { g.strokeStyle = c1; g.lineWidth = 2; g.stroke(); g.lineWidth = 1; }
+    const cx = x + tw / 2, cy = y + th / 2, r = Math.min(tw, th) * 0.2;
+    if (talking) {
+      for (let k = 0; k < 3; k++) {
+        const p = (t * 1.2 + k / 3) % 1;
+        g.strokeStyle = hexA(c1, (1 - p) * 0.6);
+        g.beginPath(); g.arc(cx, cy, r + p * r * 1.4, 0, TAU); g.stroke();
+      }
+    }
+    g.fillStyle = hexA(i % 2 ? c2 : c1, 0.75);
+    g.beginPath(); g.arc(cx, cy, r, 0, TAU); g.fill();
+  }
+  const words = 'so the grant review moves to thursday and ai will send the summary to everyone'.split(' ');
+  const n = Math.floor((t * 4) % (words.length + 8));
+  g.fillStyle = 'rgba(0,0,0,0.55)';
+  g.beginPath(); g.roundRect(w * 0.08, h * 0.76, w * 0.84, 40, 10); g.fill();
+  g.fillStyle = '#ffffff';
+  g.font = '500 13px Inter, sans-serif';
+  g.textAlign = 'left';
+  g.fillText(words.slice(Math.max(0, n - 9), n).join(' '), w * 0.08 + 16, h * 0.76 + 25);
+  g.fillStyle = c1;
+  g.font = '600 9px JetBrains Mono, monospace';
+  g.fillText('● LIVE CAPTIONS', w * 0.08, h * 0.76 - 8);
+}
+
+// Calling platform: a handset with ripples and a signal meter
+function call(g, w, h, t, c1, c2, m) {
+  backdrop(g, w, h, c1, c2);
+  const cx = w / 2, cy = h * 0.5;
+  const near = Math.max(0, 1 - Math.hypot(cx - m.x, cy - m.y) / 200);
+  for (let k = 0; k < 5; k++) {
+    const p = (t * 0.5 + k / 5) % 1;
+    g.strokeStyle = hexA(k % 2 ? c1 : c2, (1 - p) * 0.55);
+    g.lineWidth = 2;
+    g.beginPath(); g.arc(cx, cy, 40 + p * Math.min(w, h) * 0.45, 0, TAU); g.stroke();
+  }
+  g.lineWidth = 1;
+  const shake = Math.sin(t * 30) * (Math.sin(t * 2) > 0 ? 4 : 0) * (1 + near);
+  g.save();
+  g.translate(cx, cy);
+  g.rotate(shake * 0.02);
+  const grd = g.createLinearGradient(-38, -38, 38, 38);
+  grd.addColorStop(0, c1);
+  grd.addColorStop(1, c2);
+  g.fillStyle = grd;
+  g.beginPath(); g.arc(0, 0, 38 + near * 6, 0, TAU); g.fill();
+  g.strokeStyle = '#0b0c10';
+  g.lineWidth = 7;
+  g.lineCap = 'round';
+  g.beginPath(); g.arc(0, 0, 16, Math.PI * 0.8, Math.PI * 1.7); g.stroke();
+  g.restore();
+  g.lineCap = 'butt';
+  g.lineWidth = 1;
+  for (let i = 0; i < 5; i++) {
+    const on = (t * 2) % 6 > i;
+    g.fillStyle = hexA('#ffffff', on ? 0.85 : 0.15);
+    g.fillRect(w - 70 + i * 10, 40 - i * 5, 6, 8 + i * 5);
+  }
+}
+
+// Tours: a route drawing itself between map pins
+const routeCache = new WeakMap();
+function route(g, w, h, t, c1, c2, m) {
+  backdrop(g, w, h, c1, c2);
+  let pts = routeCache.get(g.canvas);
+  if (!pts || pts.w !== w) {
+    pts = [[0.12, 0.72], [0.28, 0.38], [0.46, 0.6], [0.62, 0.26], [0.8, 0.48], [0.9, 0.78]].map(([x, y]) => [x * w, y * h]);
+    pts.w = w;
+    routeCache.set(g.canvas, pts);
+  }
+  g.strokeStyle = hexA('#ffffff', 0.05);
+  for (let i = 0; i < 6; i++) {
+    g.beginPath();
+    g.ellipse(w * (0.2 + i * 0.13), h * (0.5 + Math.sin(i) * 0.2), 60 + i * 10, 30 + i * 6, i, 0, TAU);
+    g.stroke();
+  }
+  const prog = (t * 0.18) % 1.25;
+  const seg = pts.length - 1;
+  g.strokeStyle = c1;
+  g.lineWidth = 3;
+  g.setLineDash([10, 8]);
+  g.lineDashOffset = -t * 30;
+  g.beginPath();
+  g.moveTo(...pts[0]);
+  for (let i = 1; i < pts.length; i++) {
+    const k = Math.min(1, Math.max(0, prog * seg - (i - 1)));
+    if (k <= 0) break;
+    const [ax, ay] = pts[i - 1], [bx, by] = pts[i];
+    const mx = (ax + bx) / 2, my = Math.min(ay, by) - 40;
+    const x = (1 - k) ** 2 * ax + 2 * (1 - k) * k * mx + k * k * bx;
+    const y = (1 - k) ** 2 * ay + 2 * (1 - k) * k * my + k * k * by;
+    g.quadraticCurveTo(ax + (mx - ax) * k, ay + (my - ay) * k, x, y);
+  }
+  g.stroke();
+  g.setLineDash([]);
+  g.lineWidth = 1;
+  pts.forEach(([x, y], i) => {
+    const reached = prog * seg >= i;
+    const hover = Math.max(0, 1 - Math.hypot(x - m.x, y - m.y) / 50);
+    g.fillStyle = reached ? c2 : hexA('#ffffff', 0.2);
+    g.beginPath();
+    g.arc(x, y - 12 - hover * 6, 9 + hover * 3, Math.PI * 0.85, Math.PI * 2.15);
+    g.lineTo(x, y - hover * 6);
+    g.fill();
+    g.fillStyle = '#07080c';
+    g.beginPath(); g.arc(x, y - 12 - hover * 6, 3.5, 0, TAU); g.fill();
+  });
+}
+
+const painters = { tenants, pulse, wave, graph, orbit, flow, video, call, route };
 
 export function mountCover(canvas, type, c1, c2) {
   const g = canvas.getContext('2d');

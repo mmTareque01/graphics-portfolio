@@ -170,6 +170,12 @@ main { position: relative; z-index: 2; }
 .tile h4 i { font-style: normal; color: var(--muted); transition: transform 0.4s var(--ease-out), color 0.3s; }
 .tile:hover h4 i { color: var(--cyan); transform: translate(3px, -3px); }
 .tile p { color: var(--muted); font-size: 14px; }
+.tile__tag { color: var(--muted); font-size: 10px; }
+.tile[data-group='Client'] .tile__tag { color: var(--warm); }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { padding: 9px 16px; border-radius: 100px; border: 1px solid var(--line); color: var(--muted); transition: all 0.3s; }
+.chip:hover { color: var(--ink); border-color: rgba(255, 255, 255, 0.3); }
+.chip.is-on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .tile small { margin-top: auto; font-family: var(--mono); font-size: 11px; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.04em; }
 
 /* ---------- Open source ---------- */

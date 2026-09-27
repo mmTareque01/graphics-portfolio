@@ -24,11 +24,14 @@ scrollTo(0, 0);
 --------------------------------------------------------------------------- */
 $$('[data-gh]').forEach((a) => (a.href = profile.github));
 $$('[data-li]').forEach((a) => (a.href = profile.linkedin));
-$$('[data-up], [data-hire]').forEach((a) => (a.href = profile.upwork));
+$$('[data-up]').forEach((a) => (a.href = profile.upwork));
+// "Hire me" opens an email draft instead of Upwork
+$$('[data-hire]').forEach((a) => (a.href = `mailto:${profile.email}?subject=${encodeURIComponent('Project inquiry')}`));
 $$('[data-mailto]').forEach((a) => (a.href = `mailto:${profile.email}`));
 $$('[data-email]').forEach((el) => (el.textContent = profile.email));
 $$('[data-loc]').forEach((el) => (el.textContent = profile.location));
 $('[data-year]').textContent = new Date().getFullYear();
+$('[data-status]').textContent = profile.status;
 
 const clock = $('[data-clock]');
 const tick = () => (clock.textContent = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Dhaka' }).format(new Date()));
@@ -44,7 +47,7 @@ $('.cases').innerHTML = work.map((p, i) => {
     ? [p.links.live && `<a href="${p.links.live}" target="_blank" rel="noopener" data-cursor="Open">Live site ↗</a>`,
        p.links.live2 && `<a href="${p.links.live2}" target="_blank" rel="noopener" data-cursor="Open">Second demo ↗</a>`,
        p.links.code && `<a href="${p.links.code}" target="_blank" rel="noopener" data-cursor="Code">Source ↗</a>`].filter(Boolean).join('')
-    : '<span class="mono">Private codebase · demo on request</span>';
+    : `<span class="mono">${p.client ? 'Client project · private codebase' : 'Private codebase · demo on request'}</span>`;
   const visual = p.shots
     ? `<div class="shots">${p.shots.map((s) => `<img src="${s}" alt="${p.title} screenshot" loading="lazy" />`).join('')}</div>`
     : `<canvas data-art="${p.art}"></canvas>`;
@@ -72,11 +75,31 @@ $$('.case').forEach((el, i) => {
   if (c) mountCover(c, c.dataset.art, work[i].c1, work[i].c2);
 });
 
+const groupLabel = { Client: 'Client · Mugen', Own: 'Own product' };
 $('.archive__grid').innerHTML = more.map((m) => {
   const tag = m.href ? 'a' : 'div';
   const attrs = m.href ? `href="${m.href}" target="_blank" rel="noopener" data-cursor="Open"` : '';
-  return `<${tag} class="tile" ${attrs}><h4>${m.title}${m.href ? '<i>↗</i>' : ''}</h4><p>${m.desc}</p><small>${m.stack}</small></${tag}>`;
+  return `<${tag} class="tile" data-group="${m.group}" ${attrs}><span class="tile__tag mono">${groupLabel[m.group]}</span><h4>${m.title}${m.href ? '<i>↗</i>' : ''}</h4><p>${m.desc}</p><small>${m.stack}</small></${tag}>`;
 }).join('');
+const chips = $('.chips');
+chips.innerHTML = [['all', `All ${more.length}`], ['Client', 'Client work'], ['Own', 'Own products']]
+  .map(([k, l], i) => `<button class="chip mono${i ? '' : ' is-on'}" data-filter="${k}">${l}</button>`).join('');
+chips.addEventListener('click', (e) => {
+  const b = e.target.closest('.chip');
+  if (!b || b.classList.contains('is-on')) return;
+  $$('.chip').forEach((c) => c.classList.toggle('is-on', c === b));
+  const f = b.dataset.filter;
+  const tiles = $$('.tile');
+  gsap.to(tiles, {
+    opacity: 0, y: 16, duration: 0.25, stagger: 0.01, ease: 'power2.in',
+    onComplete: () => {
+      tiles.forEach((t) => (t.style.display = f === 'all' || t.dataset.group === f ? '' : 'none'));
+      const shown = tiles.filter((t) => t.style.display !== 'none');
+      gsap.fromTo(shown, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.03, ease: 'expo.out' });
+      ScrollTrigger.refresh();
+    },
+  });
+});
 $$('.tile').forEach((t) => t.addEventListener('pointermove', (e) => {
   const r = t.getBoundingClientRect();
   t.style.setProperty('--mx', `${e.clientX - r.left}px`);

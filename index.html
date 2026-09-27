@@ -34,14 +34,14 @@
         <a href="#stack" data-idx="03">Stack</a>
         <a href="#contact" data-idx="04">Contact</a>
       </nav>
-      <a class="nav__cta magnetic" data-hire target="_blank" rel="noopener"><span>Hire me</span><i>↗</i></a>
+      <a class="nav__cta magnetic" data-hire data-cursor="Email"><span>Hire me</span><i>✉</i></a>
     </header>
 
     <main>
       <!-- Hero -->
       <section class="hero" id="top">
         <div class="hero__inner">
-          <p class="status mono"><i></i> Open to new opportunities</p>
+          <p class="status mono"><i></i> <span data-status></span></p>
           <h1 class="hero__name">
             <span class="mask"><span class="hero__line" data-glitch="MUHIMENUL">Muhimenul</span></span>
             <span class="mask"><span class="hero__line hero__line--out" data-glitch="TAREQUE">Tareque</span></span>
@@ -90,6 +90,7 @@
       <section class="archive">
         <div class="archive__head">
           <h3 class="h3" data-split>More from the archive</h3>
+          <div class="chips" role="group" aria-label="Filter projects"></div>
           <a class="mono link" data-gh target="_blank" rel="noopener">All 57 repositories ↗</a>
         </div>
         <div class="archive__grid"></div>
